@@ -323,6 +323,10 @@ module Capybara::Webkit
         browser.block_unknown_urls
       end
 
+      if @options[:timeout]
+        browser.timeout = @options[:timeout]
+      end
+
       Array(@options[:allowed_urls]).each { |url| browser.allow_url(url) }
       Array(@options[:blocked_urls]).each { |url| browser.block_url(url) }
     end

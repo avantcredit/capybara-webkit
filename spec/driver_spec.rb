@@ -2830,29 +2830,29 @@ CACHE MANIFEST
     end
 
     it "should not raise a timeout error when zero" do
-      driver.browser.timeout = 0
+      configure { |config| config.timeout = 0 }
       lambda { visit("/") }.should_not raise_error
     end
 
     it "should raise a timeout error" do
-      driver.browser.timeout = 1
+      configure { |config| config.timeout = 1 }
       lambda { visit("/") }.should raise_error(Timeout::Error, "Request timed out after 1 second(s)")
     end
 
     it "should not raise an error when the timeout is high enough" do
-      driver.browser.timeout = 10
+      configure { |config| config.timeout = 10 }
       lambda { visit("/") }.should_not raise_error
     end
 
     it "should set the timeout for each request" do
-      driver.browser.timeout = 10
+      configure { |config| config.timeout = 10 }
       lambda { visit("/") }.should_not raise_error
       driver.browser.timeout = 1
       lambda { visit("/") }.should raise_error(Timeout::Error)
     end
 
     it "should set the timeout for each request" do
-      driver.browser.timeout = 1
+      configure { |config| config.timeout = 1 }
       lambda { visit("/") }.should raise_error(Timeout::Error)
       driver.reset!
       driver.browser.timeout = 10
@@ -2860,7 +2860,7 @@ CACHE MANIFEST
     end
 
     it "should raise a timeout on a slow form" do
-      driver.browser.timeout = 3
+      configure { |config| config.timeout = 3 }
       visit("/")
       driver.status_code.should eq 200
       driver.browser.timeout = 1
@@ -2869,10 +2869,8 @@ CACHE MANIFEST
     end
 
     it "get timeout" do
-      driver.browser.timeout = 10
+      configure { |config| config.timeout = 10 }
       driver.browser.timeout.should eq 10
-      driver.browser.timeout = 3
-      driver.browser.timeout.should eq 3
     end
   end
 
@@ -2889,8 +2887,7 @@ CACHE MANIFEST
       end
 
       it "logs its commands in debug mode" do
-        # configure { |config| config.debug = true }
-        driver.enable_logging
+        configure { |config| config.debug = true }
         visit("/")
         stderr.should include logging_message
       end

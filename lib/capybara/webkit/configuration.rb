@@ -25,12 +25,14 @@ module Capybara
       attr_writer :block_unknown_urls
       attr_accessor :blocked_urls
       attr_accessor :debug
+      attr_accessor :timeout
 
       def initialize
         @allowed_urls = []
         @blocked_urls = []
         @block_unknown_urls = false
         @debug = false
+        @timeout = -1
       end
 
       def allow_url(url)
@@ -58,7 +60,8 @@ module Capybara
           allowed_urls: allowed_urls,
           block_unknown_urls: block_unknown_urls?,
           blocked_urls: blocked_urls,
-          debug: debug
+          debug: debug,
+          timeout: timeout
         }
       end
     end
