@@ -121,6 +121,14 @@ Capybara::Webkit.configure do |config|
 
   # Don't load images
   config.skip_image_loading
+
+  # Use a proxy
+  config.use_proxy(
+    host: "example.com",
+    port: 1234,
+    user: "proxy",
+    pass: "secret"
+  )
 end
 ```
 

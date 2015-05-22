@@ -26,6 +26,7 @@ module Capybara
       attr_accessor :blocked_urls
       attr_accessor :debug
       attr_writer :ignore_ssl_errors
+      attr_accessor :proxy
       attr_accessor :timeout
       attr_writer :skip_image_loading
 
@@ -35,6 +36,7 @@ module Capybara
         @block_unknown_urls = false
         @debug = false
         @ignore_ssl_errors = false
+        @proxy = nil
         @skip_image_loading = false
         @timeout = -1
       end
@@ -75,6 +77,10 @@ module Capybara
         @skip_image_loading
       end
 
+      def use_proxy(proxy)
+        @proxy = proxy
+      end
+
       def to_hash
         {
           allowed_urls: allowed_urls,
@@ -82,6 +88,7 @@ module Capybara
           blocked_urls: blocked_urls,
           debug: debug,
           ignore_ssl_errors: ignore_ssl_errors?,
+          proxy: proxy,
           skip_image_loading: skip_image_loading?,
           timeout: timeout
         }

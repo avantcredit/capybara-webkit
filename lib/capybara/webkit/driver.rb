@@ -331,6 +331,10 @@ module Capybara::Webkit
         browser.set_skip_image_loading(true)
       end
 
+      if @options[:proxy]
+        browser.set_proxy(@options[:proxy])
+      end
+
       if @options[:timeout]
         browser.timeout = @options[:timeout]
       end

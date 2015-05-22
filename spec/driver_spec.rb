@@ -3176,6 +3176,102 @@ CACHE MANIFEST
     end
   end
 
+  describe "#set_proxy" do
+    before do
+      @host = "127.0.0.1"
+      @user = "user"
+      @pass = "secret"
+      @url  = "http://example.org/"
+
+      @server = TCPServer.new(@host, 0)
+      @port = @server.addr[1]
+
+      @proxy_requests = []
+      @proxy = Thread.new(@server, @proxy_requests) do |serv, proxy_requests|
+        while conn = serv.accept do
+          # read request
+          request = []
+          until (line = conn.readline.strip).empty?
+            request << line
+          end
+
+          # send response
+          auth_header = request.find { |h| h =~ /Authorization:/i }
+          if auth_header || request[0].split(/\s+/)[1] =~ /^\//
+            html = "<html><body>D'oh!</body></html>"
+            conn.write "HTTP/1.1 200 OK\r\n"
+            conn.write "Content-Type:text/html\r\n"
+            conn.write "Content-Length: %i\r\n" % html.size
+            conn.write "\r\n"
+            conn.write html
+            conn.close
+            proxy_requests << request if auth_header
+          else
+            conn.write "HTTP/1.1 407 Proxy Auth Required\r\n"
+            conn.write "Proxy-Authenticate: Basic realm=\"Proxy\"\r\n"
+            conn.write "\r\n"
+            conn.close
+            proxy_requests << request
+          end
+        end
+      end
+
+      configure do |config|
+        config.allow_url("example.org")
+        config.use_proxy host: @host, port: @port, user: @user, pass: @pass
+      end
+
+      driver.visit @url
+      @proxy_requests.size.should eq 2
+      @request = @proxy_requests[-1]
+    end
+
+    after do
+      @proxy.kill
+      @server.close
+    end
+
+    let(:driver) do
+      driver_for_html("")
+    end
+
+    it "uses the HTTP proxy correctly" do
+      @request[0].should match(/^GET\s+http:\/\/example.org\/\s+HTTP/i)
+      @request.find { |header|
+        header =~ /^Host:\s+example.org$/i }.should_not be nil
+    end
+
+    it "sends correct proxy authentication" do
+      auth_header = @request.find { |header|
+        header =~ /^Proxy-Authorization:\s+/i }
+      auth_header.should_not be nil
+
+      user, pass = Base64.decode64(auth_header.split(/\s+/)[-1]).split(":")
+      user.should eq @user
+      pass.should eq @pass
+    end
+
+    it "uses the proxy's response" do
+      driver.html.should include "D'oh!"
+    end
+
+    it "uses original URL" do
+      driver.current_url.should eq @url
+    end
+
+    it "uses URLs changed by javascript" do
+      driver.execute_script %{window.history.pushState("", "", "/blah")}
+      driver.current_url.should eq "http://example.org/blah"
+    end
+
+    it "is possible to disable proxy again" do
+      @proxy_requests.clear
+      driver.browser.clear_proxy
+      driver.visit "http://#{@host}:#{@port}/"
+      @proxy_requests.size.should eq 0
+    end
+  end
+
   def driver_url(driver, path)
     URI.parse(driver.current_url).merge(path).to_s
   end
