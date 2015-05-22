@@ -323,6 +323,10 @@ module Capybara::Webkit
         browser.block_unknown_urls
       end
 
+      if @options[:ignore_ssl_errors]
+        browser.ignore_ssl_errors
+      end
+
       if @options[:timeout]
         browser.timeout = @options[:timeout]
       end

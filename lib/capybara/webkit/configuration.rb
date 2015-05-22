@@ -25,6 +25,7 @@ module Capybara
       attr_writer :block_unknown_urls
       attr_accessor :blocked_urls
       attr_accessor :debug
+      attr_writer :ignore_ssl_errors
       attr_accessor :timeout
 
       def initialize
@@ -32,6 +33,7 @@ module Capybara
         @blocked_urls = []
         @block_unknown_urls = false
         @debug = false
+        @ignore_ssl_errors = false
         @timeout = -1
       end
 
@@ -55,12 +57,21 @@ module Capybara
         allow_url("*")
       end
 
+      def ignore_ssl_errors
+        @ignore_ssl_errors = true
+      end
+
+      def ignore_ssl_errors?
+        @ignore_ssl_errors
+      end
+
       def to_hash
         {
           allowed_urls: allowed_urls,
           block_unknown_urls: block_unknown_urls?,
           blocked_urls: blocked_urls,
           debug: debug,
+          ignore_ssl_errors: ignore_ssl_errors?,
           timeout: timeout
         }
       end

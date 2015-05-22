@@ -3,6 +3,7 @@
 require 'spec_helper'
 require 'capybara/webkit/driver'
 require 'base64'
+require 'self_signed_ssl_cert'
 
 describe Capybara::Webkit::Driver do
   include AppRunner
@@ -3052,6 +3053,72 @@ CACHE MANIFEST
         driver.response_headers["Content-Disposition"]
       ).to eq 'filename="File: name.txt"'
     end
+  end
+
+  context "handling of SSL validation errors" do
+    before do
+      # set up minimal HTTPS server
+      @host = "127.0.0.1"
+      @server = TCPServer.new(@host, 0)
+      @port = @server.addr[1]
+
+      # set up SSL layer
+      ssl_serv = OpenSSL::SSL::SSLServer.new(@server, $openssl_self_signed_ctx)
+
+      @server_thread = Thread.new(ssl_serv) do |serv|
+        while conn = serv.accept do
+          # read request
+          request = []
+          until (line = conn.readline.strip).empty?
+            request << line
+          end
+
+          # write response
+          html = "<html><body>D'oh!</body></html>"
+          conn.write "HTTP/1.1 200 OK\r\n"
+          conn.write "Content-Type:text/html\r\n"
+          conn.write "Content-Length: %i\r\n" % html.size
+          conn.write "\r\n"
+          conn.write html
+          conn.close
+        end
+      end
+    end
+
+    after do
+      @server_thread.kill
+      @server.close
+    end
+
+    context "with default settings" do
+      it "doesn't accept a self-signed certificate" do
+        lambda { driver.visit "https://#{@host}:#{@port}/" }.should raise_error
+      end
+
+      it "doesn't accept a self-signed certificate in a new window" do
+        driver.execute_script("window.open('about:blank')")
+        driver.switch_to_window(driver.window_handles.last)
+        lambda { driver.visit "https://#{@host}:#{@port}/" }.should raise_error
+      end
+    end
+
+    context "ignoring SSL errors" do
+      it "accepts a self-signed certificate if configured to do so" do
+        configure(&:ignore_ssl_errors)
+        driver.visit "https://#{@host}:#{@port}/"
+      end
+
+      it "accepts a self-signed certificate in a new window when configured" do
+        configure(&:ignore_ssl_errors)
+        driver.execute_script("window.open('about:blank')")
+        driver.switch_to_window(driver.window_handles.last)
+        driver.visit "https://#{@host}:#{@port}/"
+      end
+    end
+
+    let(:driver) { driver_for_html("", browser: browser) }
+    let(:browser) { Capybara::Webkit::Browser.new(connection) }
+    let(:connection) { Capybara::Webkit::Connection.new }
   end
 
   def driver_url(driver, path)

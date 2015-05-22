@@ -9,70 +9,9 @@ describe Capybara::Webkit::Browser do
 
   let(:connection) { Capybara::Webkit::Connection.new }
   let(:browser) { Capybara::Webkit::Browser.new(connection) }
-  let(:browser_ignore_ssl_err) do
-    Capybara::Webkit::Browser.new(Capybara::Webkit::Connection.new).tap do |browser|
-      browser.ignore_ssl_errors
-    end
-  end
   let(:browser_skip_images) do
     Capybara::Webkit::Browser.new(Capybara::Webkit::Connection.new).tap do |browser|
       browser.set_skip_image_loading(true)
-    end
-  end
-
-  context 'handling of SSL validation errors' do
-    before do
-      # set up minimal HTTPS server
-      @host = "127.0.0.1"
-      @server = TCPServer.new(@host, 0)
-      @port = @server.addr[1]
-
-      # set up SSL layer
-      ssl_serv = OpenSSL::SSL::SSLServer.new(@server, $openssl_self_signed_ctx)
-
-      @server_thread = Thread.new(ssl_serv) do |serv|
-        while conn = serv.accept do
-          # read request
-          request = []
-          until (line = conn.readline.strip).empty?
-            request << line
-          end
-
-          # write response
-          html = "<html><body>D'oh!</body></html>"
-          conn.write "HTTP/1.1 200 OK\r\n"
-          conn.write "Content-Type:text/html\r\n"
-          conn.write "Content-Length: %i\r\n" % html.size
-          conn.write "\r\n"
-          conn.write html
-          conn.close
-        end
-      end
-    end
-
-    after do
-      @server_thread.kill
-      @server.close
-    end
-
-    it "doesn't accept a self-signed certificate by default" do
-      lambda { browser.visit "https://#{@host}:#{@port}/" }.should raise_error
-    end
-
-    it 'accepts a self-signed certificate if configured to do so' do
-      browser_ignore_ssl_err.visit "https://#{@host}:#{@port}/"
-    end
-
-    it "doesn't accept a self-signed certificate in a new window by default" do
-      browser.execute_script("window.open('about:blank')")
-      browser.window_focus(browser.get_window_handles.last)
-      lambda { browser.visit "https://#{@host}:#{@port}/" }.should raise_error
-    end
-
-    it 'accepts a self-signed certificate in a new window if configured to do so' do
-      browser_ignore_ssl_err.execute_script("window.open('about:blank')")
-      browser_ignore_ssl_err.window_focus(browser_ignore_ssl_err.get_window_handles.last)
-      browser_ignore_ssl_err.visit "https://#{@host}:#{@port}/"
     end
   end
 
