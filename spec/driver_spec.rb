@@ -3056,10 +3056,12 @@ CACHE MANIFEST
               <html>
                 <body>
                   <script type="text/javascript">
-                    xhr = new XMLHttpRequest();
-                    xhr.open('GET', '/async?#{count}', true);
-                    xhr.setRequestHeader('Content-Type', 'text/plain');
-                    xhr.send();
+                    setTimeout(function () {
+                      xhr = new XMLHttpRequest();
+                      xhr.open('GET', '/async?#{count}', true);
+                      xhr.setRequestHeader('Content-Type', 'text/plain');
+                      xhr.send();
+                    }, 50);
                   </script>
                 </body>
               </html>
