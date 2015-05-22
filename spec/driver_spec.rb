@@ -3121,6 +3121,61 @@ CACHE MANIFEST
     let(:connection) { Capybara::Webkit::Connection.new }
   end
 
+  context "skip image loading" do
+    let(:driver) do
+      driver_for_app do
+        requests = []
+
+        get "/" do
+          <<-HTML
+            <html>
+              <head>
+                <style>
+                  body {
+                    background-image: url(/path/to/bgimage);
+                  }
+                </style>
+              </head>
+              <body>
+                <img src="/path/to/image"/>
+              </body>
+            </html>
+          HTML
+        end
+
+        get "/requests" do
+          <<-HTML
+            <html>
+              <body>
+                #{requests.map { |path| "<p>#{path}</p>" }.join}
+              </body>
+            </html>
+          HTML
+        end
+
+        get %r{/path/to/(.*)} do |path|
+          requests << path
+        end
+      end
+    end
+
+    it "should load images by default" do
+      visit("/")
+      requests.should match_array %w(image bgimage)
+    end
+
+    it "should not load images when disabled" do
+      configure(&:skip_image_loading)
+      visit("/")
+      requests.should eq []
+    end
+
+    let(:requests) do
+      visit "/requests"
+      driver.find("//p").map(&:text)
+    end
+  end
+
   def driver_url(driver, path)
     URI.parse(driver.current_url).merge(path).to_s
   end

@@ -27,6 +27,7 @@ module Capybara
       attr_accessor :debug
       attr_writer :ignore_ssl_errors
       attr_accessor :timeout
+      attr_writer :skip_image_loading
 
       def initialize
         @allowed_urls = []
@@ -34,6 +35,7 @@ module Capybara
         @block_unknown_urls = false
         @debug = false
         @ignore_ssl_errors = false
+        @skip_image_loading = false
         @timeout = -1
       end
 
@@ -65,6 +67,14 @@ module Capybara
         @ignore_ssl_errors
       end
 
+      def skip_image_loading
+        @skip_image_loading = true
+      end
+
+      def skip_image_loading?
+        @skip_image_loading
+      end
+
       def to_hash
         {
           allowed_urls: allowed_urls,
@@ -72,6 +82,7 @@ module Capybara
           blocked_urls: blocked_urls,
           debug: debug,
           ignore_ssl_errors: ignore_ssl_errors?,
+          skip_image_loading: skip_image_loading?,
           timeout: timeout
         }
       end

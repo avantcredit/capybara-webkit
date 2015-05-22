@@ -327,6 +327,10 @@ module Capybara::Webkit
         browser.ignore_ssl_errors
       end
 
+      if @options[:skip_image_loading]
+        browser.set_skip_image_loading(true)
+      end
+
       if @options[:timeout]
         browser.timeout = @options[:timeout]
       end
