@@ -73,6 +73,7 @@ void WebPage::setCustomNetworkAccessManager() {
 }
 
 void WebPage::replyFinished(QUrl &requestedUrl, QNetworkReply *reply) {
+  m_manager->logger() << "reply finished" << reply->url().toString();
   NetworkReplyProxy *proxy = qobject_cast<NetworkReplyProxy *>(reply);
   setFrameProperties(mainFrame(), requestedUrl, proxy);
   foreach(QWebFrame *frame, mainFrame()->childFrames())
@@ -259,6 +260,7 @@ void WebPage::loadStarted() {
 }
 
 void WebPage::loadFinished(bool success) {
+
   Q_UNUSED(success);
   m_loading = false;
   emit pageFinished(!m_failed);
