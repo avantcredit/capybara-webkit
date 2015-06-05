@@ -106,11 +106,14 @@ void WebPageManager::handleReplyFinished() {
 void WebPageManager::replyFinished(QNetworkReply *reply) {
   int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
   logger() << "Received" << status << "from" << reply->url().toString();
-  m_pendingReplies.removeAll(reply);
+  int removed = m_pendingReplies.removeAll(reply);
+  logger() << "Removed" << removed << "copies of" << reply->url().toString();
 }
 
 void WebPageManager::replyDestroyed(QObject *reply) {
-  m_pendingReplies.removeAll((QNetworkReply *) reply);
+  logger() << "Destroying Reply" << ((QNetworkReply *) reply)->url().toString();
+  int removed = m_pendingReplies.removeAll((QNetworkReply *) reply);
+  logger() << "Removed" << removed << "copies of" << ((QNetworkReply *) reply)->url().toString();
 }
 
 void WebPageManager::setPageStatus(bool success) {
@@ -145,6 +148,7 @@ void WebPageManager::setTimeout(int timeout) {
 }
 
 void WebPageManager::reset() {
+  logger() << "Resetting";
   m_timeout = -1;
   m_cookieJar->clearCookies();
   m_networkAccessManager->reset();
