@@ -98,22 +98,22 @@ void WebPageManager::requestCreated(QByteArray &url, QNetworkReply *reply) {
 }
 
 void WebPageManager::handleReplyFinished() {
+  logger() << "handling reply finished";
   QNetworkReply *reply = qobject_cast<QNetworkReply *>(sender());
   disconnect(reply, SIGNAL(finished()), this, SLOT(handleReplyFinished()));
   replyFinished(reply);
 }
 
 void WebPageManager::replyFinished(QNetworkReply *reply) {
+  logger() << "Received" << reply->url().toString();
   int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
   logger() << "Received" << status << "from" << reply->url().toString();
-  int removed = m_pendingReplies.removeAll(reply);
-  logger() << "Removed" << removed << "copies of" << reply->url().toString();
+  m_pendingReplies.removeAll(reply);
 }
 
 void WebPageManager::replyDestroyed(QObject *reply) {
-  logger() << "Destroying Reply" << ((QNetworkReply *) reply)->url().toString();
-  int removed = m_pendingReplies.removeAll((QNetworkReply *) reply);
-  logger() << "Removed" << removed << "copies of" << ((QNetworkReply *) reply)->url().toString();
+  logger() << "handling reply destroyed for" << ((QNetworkReply *) reply)->url().toString();
+  m_pendingReplies.removeAll((QNetworkReply *) reply);
 }
 
 void WebPageManager::setPageStatus(bool success) {

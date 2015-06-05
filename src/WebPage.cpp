@@ -424,6 +424,7 @@ void WebPage::setFocus() {
 }
 
 void WebPage::remove() {
+  logger() << "removing page";
   m_manager->removePage(this);
 }
 
