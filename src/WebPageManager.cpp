@@ -114,7 +114,10 @@ void WebPageManager::replyFinished(QNetworkReply *reply) {
 void WebPageManager::replyDestroyed(QObject *reply) {
   logger() << "handling reply destroyed for" << ((QNetworkReply *) reply)->url().toString();
   m_pendingReplies.removeAll((QNetworkReply *) reply);
-  logger() << "reply destroy finished";
+  logger() << "Pending Reply: " << m_pendingReplies.size();
+  foreach(QNetworkReply *reply, m_pendingReplies) {
+    logger() << "Pending Reply: " << reply->url().toString();
+  }
 }
 
 void WebPageManager::setPageStatus(bool success) {
